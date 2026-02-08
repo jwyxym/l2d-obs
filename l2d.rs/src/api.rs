@@ -11,7 +11,7 @@ use actix_web::{
 
 #[get("/index")]
 pub async fn index() -> impl Responder {
-	let html_content: &str = include_str!("../page/index.html");
+	let html_content: &str = include_str!("../../l2d.js/dist/index.html");
 	HttpResponse::Ok()
 		.content_type("text/html; charset=utf-8")
 		.body(html_content)
@@ -21,8 +21,8 @@ pub async fn js(req: HttpRequest) -> Result<impl Responder, Error> {
 	let req: &dev::Path<dev::Url>= req.match_info();
 	let js: &str = req.query("js");
 	let content: &str = match js {
-		"live2d.min.js" => include_str!("../page/live2d.min.js"),
-		"live2dcubismcore.min.js" => include_str!("../page/live2dcubismcore.min.js"),
+		"live2d.min.js" => include_str!("../../l2d.js/dist/live2d.min.js"),
+		"live2dcubismcore.min.js" => include_str!("../../l2d.js/dist/live2dcubismcore.min.js"),
 		_ => return Err(ErrorNotFound(""))
 	};
 	Ok(HttpResponse::Ok()

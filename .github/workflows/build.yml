@@ -1,0 +1,180 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+    
+jobs:
+  build:
+    name: ${{ matrix.run-on }}-${{ matrix.target }}
+    runs-on: ${{ matrix.run-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64
+            run-on: windows-latest
+          - target: aarch64
+            run-on: windows-11-arm
+          - target: x86_64
+            run-on: ubuntu-latest
+          - target: aarch64
+            run-on: ubuntu-24.04-arm
+          - target: x86_64
+            run-on: macos-latest
+          - target: aarch64
+            run-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.18.0'
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: 1.88.0
+
+    - name: Rust cache
+      uses: swatinem/rust-cache@v2
+      with:
+        workspaces: './l2d.rs -> target'
+
+    - name: Build Front
+      run: |
+        cd l2d.js
+        npm install
+        npm run build
+
+    - name: Build Bin
+      run: |
+        cd l2d.rs
+        cargo build --release
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      if: ${{ matrix.run-on == 'windows-11-arm' || matrix.run-on == 'windows-latest' }}
+      with:
+        name: l2d.obs.${{ matrix.target }}.${{ matrix.run-on }}
+        path: ./l2d.rs/src/target/l2d_rs.exe
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      if: ${{ matrix.run-on == 'ubuntu-latest' || matrix.run-on == 'ubuntu-24.04-arm' || matrix.run-on == 'macos-latest' }}
+      with:
+        name: l2d.obs.${{ matrix.target }}.${{ matrix.run-on }}
+        path: ./l2d.rs/src/target/l2d_rs
+
+  create-release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+
+      - name: Delete old Release
+        run: |
+          TAG_NAME=release-latest
+          gh release delete "$TAG_NAME" --yes || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old tag
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git fetch --tags
+          git tag -d release-latest || true
+          git push origin :refs/tags/release-latest || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create tag
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git tag release-latest
+          git push origin release-latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: release-latest
+          release_name: release-latest
+          draft: false
+          prerelease: false
+
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/l2d.obs.x86_64.windows-latest/l2d_rs.exe
+          asset_name: l2d_rs.windows.x86.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/l2d.obs.x86_64.ubuntu-latest/l2d_rs
+          asset_name: l2d_rs.linux.x86
+          asset_content_type: application/octet-stream
+
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/l2d.obs.x86_64.macos-latest/l2d_rs
+          asset_name: l2d_rs.macos.x86
+          asset_content_type: application/octet-stream
+
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/l2d.obs.aarch64.windows-11-arm/l2d_rs.exe
+          asset_name: l2d_rs.windows.arc64.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/l2d.obs.aarch64.ubuntu-24.04-arm/l2d_rs
+          asset_name: l2d_rs.linux.arc64
+          asset_content_type: application/octet-stream
+
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/l2d.obs.aarch64.macos-latest/l2d_rs
+          asset_name: l2d_rs.macos.arc64
+          asset_content_type: application/octet-stream
