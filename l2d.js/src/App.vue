@@ -2,11 +2,14 @@
 	<canvas
 		ref = 'canvasRef'
 		id = 'live2d'
+		:style = "{
+			transform : `scaleY(${[1, 2].includes(live2D.position) ? -1 : 1})`
+		}"
 	/>
 </template>
 
 <script setup lang="ts">
-	import { onMounted, onUnmounted, ref } from 'vue';
+	import { onMounted, onUnmounted, reactive, ref } from 'vue';
 	import { Config, Live2DSprite, LogLevel } from 'easy-live2d';
 	import { Application, Ticker } from 'pixi.js';
 	import WS, { type MSG, type MSG_DATA } from './ws';
@@ -19,11 +22,12 @@
 	Config.CubismLoggingLevel = LogLevel.LogLevel_Off;
 
 	const ws = new WS();
-	const live2D = {
+	const live2D = reactive({
 		sprite : new Live2DSprite() as any,
+		position : 1,
 		on : async (path : string) => {
 			live2D.sprite.init({
-				modelPath: path,
+				modelPath: 'vts/' + path,
 				ticker: Ticker.shared
 			});
 			live2D.sprite.width = canvasRef.value!.clientWidth * window.devicePixelRatio;
@@ -32,7 +36,7 @@
 		},
 		drag : (x : number, y : number) => live2D.sprite._model?.setDragging(x, y),
 		destroy : () => live2D.sprite.destroy()
-	}
+	});
 
 	onMounted(async () => {
 		await app.init({
@@ -43,15 +47,21 @@
 			onmessage : async (e : MSG) => {
 				switch(e.protocol) {
 					case 0:
-						await live2D.on((e.data as MSG_DATA).Text)
+						live2D.position = (e.data as MSG_DATA).Number;
 						break;
 					case 1:
-						const drag = (e.data as MSG_DATA).Array;
-						live2D.drag(...drag);
+						await live2D.on((e.data as MSG_DATA).Text);
+						break;
+					case 2:
+						live2D.drag(...(e.data as MSG_DATA).Array);
 						break;
 				}
 			},
-			onopen : () => ws.send({ protocol : 0, data : 0 })
+			onopen : () => {
+				ws.send({ protocol : 0, data : 0 });
+				if (!live2D.sprite._model)
+					ws.send({ protocol : 1, data : 0 });
+			}
 		})
 	});
 

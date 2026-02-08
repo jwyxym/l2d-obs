@@ -13,13 +13,16 @@ use actix_web::{
 	web
 };
 use std::{
-	io::Result,
-	fs::create_dir_all
+	fs::{create_dir_all, exists, write},
+	io::Result
 };
 
 #[actix_web::main]
 async fn main() -> Result<()> {
-	let config: Config = Config::from("config.json");
+	let config: Config = Config::from("config.toml");
+	if let Ok(exist) = exists("config.toml") && !exist {
+		let _ = write("config.toml", config.to_string());
+	}
 	let port: i16 = config.port();
 	let _ = create_dir_all("vts");
 	HttpServer::new(move || {
@@ -42,8 +45,7 @@ async fn main() -> Result<()> {
 				.disable_content_disposition()
 			)
 			.service(api::index)
-			.service(api::js)
-			.service(Files::new("/", "./page"))
+			.service(api::web)
 	})
 	.bind(format!("127.0.0.1:{}", port))?
 	.run()

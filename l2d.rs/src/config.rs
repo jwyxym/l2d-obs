@@ -1,7 +1,7 @@
 
 use serde_derive::Deserialize;
 use serde::Serialize;
-use basic_toml::from_str;
+use basic_toml::{from_str, to_string};
 use std::fs::read_to_string;
 use walkdir::WalkDir;
 
@@ -13,7 +13,8 @@ pub struct Config {
 #[derive(Deserialize, Clone, Serialize)]
 pub struct ServerInfo {
 	port: i16,
-	model: String
+	model: String,
+	position: i8
 }
 impl Config {
 	pub fn from (path: &str) -> Config {
@@ -37,7 +38,7 @@ impl Config {
 			})
 			.map(|e| {
 				e.path()
-					.strip_prefix("./")
+					.strip_prefix("vts")
 					.unwrap_or(e.path())
 					.to_string_lossy()
 					.replace('\\', "/")
@@ -46,7 +47,8 @@ impl Config {
 			}).unwrap_or(String::from(""));
 		let info: ServerInfo = ServerInfo{
 			port: port,
-			model: model
+			model: model,
+			position: 4
 		};
 		Config {
 			server: info
@@ -57,5 +59,11 @@ impl Config {
 	}
 	pub fn model (&self) -> String {
 		self.server.model.clone()
+	}
+	pub fn position (&self) -> i8 {
+		self.server.position
+	}
+	pub fn to_string (&self) -> String {
+		to_string(self).unwrap_or(String::from("err"))
 	}
 }

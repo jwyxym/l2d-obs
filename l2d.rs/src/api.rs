@@ -9,18 +9,23 @@ use actix_web::{
 	Error
 };
 
-#[get("/index")]
-pub async fn index() -> impl Responder {
-	let html_content: &str = include_str!("../../l2d.js/dist/index.html");
-	HttpResponse::Ok()
-		.content_type("text/html; charset=utf-8")
-		.body(html_content)
+#[get("/")]
+async fn index() -> impl Responder {
+    HttpResponse::Found()
+        .append_header(("Location", "/index.html"))
+        .finish()
 }
-#[get("/{js}")]
-pub async fn js(req: HttpRequest) -> Result<impl Responder, Error> {
+
+#[get("/{key}")]
+pub async fn web(req: HttpRequest) -> Result<impl Responder, Error> {
 	let req: &dev::Path<dev::Url>= req.match_info();
-	let js: &str = req.query("js");
-	let content: &str = match js {
+	let key: &str = req.query("key");
+	if key.starts_with("index") || key == "" {
+		return Ok(HttpResponse::Ok()
+			.content_type("text/html; charset=utf-8")
+			.body(include_str!("../../l2d.js/dist/index.html")));
+	}
+	let content: &str = match key {
 		"live2d.min.js" => include_str!("../../l2d.js/dist/live2d.min.js"),
 		"live2dcubismcore.min.js" => include_str!("../../l2d.js/dist/live2dcubismcore.min.js"),
 		_ => return Err(ErrorNotFound(""))

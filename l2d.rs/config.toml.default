@@ -1,0 +1,4 @@
+[server]
+port = 8080
+model = "***.model3.json"
+position = 4
