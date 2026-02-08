@@ -73,14 +73,14 @@ jobs:
       if: ${{ matrix.run-on == 'windows-11-arm' || matrix.run-on == 'windows-latest' }}
       with:
         name: l2d.obs.${{ matrix.target }}.${{ matrix.run-on }}
-        path: ./l2d.rs/src/target/l2d_rs.exe
+        path: ./l2d.rs/src/target/release/l2d_rs.exe
 
     - name: Upload
       uses: actions/upload-artifact@v4
       if: ${{ matrix.run-on == 'ubuntu-latest' || matrix.run-on == 'ubuntu-24.04-arm' || matrix.run-on == 'macos-latest' }}
       with:
         name: l2d.obs.${{ matrix.target }}.${{ matrix.run-on }}
-        path: ./l2d.rs/src/target/l2d_rs
+        path: ./l2d.rs/src/target/release/l2d_rs
 
   create-release:
     needs: [build]
