@@ -1,0 +1,7 @@
+/l2d.rs/target
+/l2d.rs/vts
+/l2d.rs/*.exe
+/l2d.js/dist
+/l2d.js/node_modules
+/l2d.js/*.log
+/l2d.js/.vscode

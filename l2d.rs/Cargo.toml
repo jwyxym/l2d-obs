@@ -1,0 +1,20 @@
+[package]
+name = "l2d_rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+basic-toml = "0.1.10"
+actix-web = "4.10.2"
+actix-cors = "0.7.1"
+actix-files = "0.6"
+walkdir = "2.5.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1.0.228"
+serde_json = "1.0"
+futures-util = "0.3"
+device_query = "4.0.1"
+screen-info = "0.0.1"
+actix-web-lab = "0.24.3"
+actix = "0.13.5"
+actix-web-actors = "4.3.1"
