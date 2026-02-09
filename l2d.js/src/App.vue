@@ -23,8 +23,8 @@
 
 	const ws = new WS();
 	const live2D = reactive({
-		sprite : new Live2DSprite() as any,
-		position : 1,
+		sprite : new Live2DSprite(),
+		position : 0,
 		on : async (path : string) => {
 			live2D.sprite.init({
 				modelPath: 'vts/' + path,

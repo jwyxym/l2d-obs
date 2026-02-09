@@ -6,3 +6,4 @@
 /l2d.js/*.log
 /l2d.js/.vscode
 l2d.rs/config.toml
+/l2d.js/public/vts
