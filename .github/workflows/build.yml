@@ -61,6 +61,7 @@ jobs:
           libxinerama-dev \
           libxcursor-dev \
           libxi-dev \
+          libasound2-dev \
           pkg-config
 
     - name: Build Bin
