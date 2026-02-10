@@ -4,7 +4,6 @@ use serde::Serialize;
 use basic_toml::{from_str, to_string};
 use std::fs::read_to_string;
 use walkdir::WalkDir;
-
 #[derive(Deserialize, Clone, Serialize)]
 pub struct Config {
 	server: ServerInfo
@@ -12,19 +11,21 @@ pub struct Config {
 
 #[derive(Deserialize, Clone, Serialize)]
 pub struct ServerInfo {
+	address: String,
 	port: i16,
 	model: String,
-	position: i8
+	position: i8,
+	micro: bool
 }
 impl Config {
 	pub fn from (path: &str) -> Config {
 		if let Ok(file) = read_to_string(path) {
-			from_str(&file).unwrap_or(Config::new(8080))
+			from_str::<Config>(&file).unwrap_or(Config::new("127.0.0.1", 8080))
 		} else {
-			Config::new(8080)
+			Config::new("127.0.0.1", 8080)
 		}
 	}
-	pub fn new (port: i16) -> Config {
+	pub fn new (address: &str, port: i16) -> Config {
 		let model: String = WalkDir::new("vts")
 			.into_iter()
 			.filter_map(Result::ok)
@@ -46,13 +47,18 @@ impl Config {
 					.to_string()
 			}).unwrap_or(String::from(""));
 		let info: ServerInfo = ServerInfo{
+			address: String::from(address),
 			port: port,
 			model: model,
-			position: 4
+			position: 4,
+			micro: false
 		};
 		Config {
 			server: info
 		}
+	}
+	pub fn address (&self) -> String {
+		self.server.address.clone()
 	}
 	pub fn port (&self) -> i16 {
 		self.server.port
@@ -63,7 +69,10 @@ impl Config {
 	pub fn position (&self) -> i8 {
 		self.server.position
 	}
+	pub fn micro (&self) -> bool {
+		self.server.micro
+	}
 	pub fn to_string (&self) -> String {
-		to_string(self).unwrap_or(String::from("err"))
+		to_string(&self).unwrap_or(String::from("err"))
 	}
 }

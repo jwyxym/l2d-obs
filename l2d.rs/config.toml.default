@@ -1,4 +1,6 @@
 [server]
+address = "127.0.0.1"
 port = 8080
 model = "***.model3.json"
 position = 4
+micro = false

@@ -3,7 +3,7 @@ use serde_json::{self, Value, from_str, from_value, to_string};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum MSGDATA {
-	Number(i8),
+	Number(f64),
 	Text(String),
 	Array([f64; 2])
 }
@@ -29,7 +29,7 @@ impl MSG {
 		
 		if let Ok(raw) = from_str::<Message>(&json) {
 			let data: MSGDATA = match raw.protocol {
-				0 => MSGDATA::Number(from_value(raw.data).unwrap_or(-1)),
+				0 => MSGDATA::Number(from_value(raw.data).unwrap_or(-1.0)),
 				1 => MSGDATA::Text(from_value(raw.data).unwrap_or(String::from(""))),
 				_ => MSGDATA::Text(String::from("")),
 			};
@@ -49,6 +49,6 @@ impl MSG {
 		self.protocol
 	}
 	pub fn to_string(&self) -> String {
-		to_string(&self).unwrap_or(to_string(&MSG::new(-1, MSGDATA::Number(-1))).unwrap())
+		to_string(&self).unwrap_or(to_string(&MSG::new(-1, MSGDATA::Number(-1.0))).unwrap())
 	}
 }

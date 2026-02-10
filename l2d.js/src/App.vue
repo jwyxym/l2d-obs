@@ -49,12 +49,13 @@
 			});
 		},
 		openMouth : (value : number) => {
-			Object.defineProperty(live2D.sprite._model._wavFileHandler, '_lastRms', {
-				value: value,
-				writable: true,
-				enumerable: true,
-				configurable: true
-			});
+			if (live2D.sprite._model?._wavFileHandler)
+				Object.defineProperty(live2D.sprite._model._wavFileHandler, '_lastRms', {
+					value: value,
+					writable: true,
+					enumerable: true,
+					configurable: true
+				});
 		},
 		drag : (x : number, y : number) => live2D.sprite._model?.setDragging(x, y),
 		destroy : () => live2D.sprite.destroy()
@@ -65,6 +66,7 @@
 			view: canvasRef.value,
 			backgroundAlpha: 0
 		});
+		// await live2D.on('./白皇后_vts/码丽丝.model3.json')
 		ws.connect({
 			onmessage : async (protocol : number, data : MSG_DATA) => {
 				switch(protocol) {

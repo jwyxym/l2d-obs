@@ -1,11 +1,12 @@
 mod msg;
 use msg::{MSG, MSGDATA};
 use crate::Config;
+use crate::global::VOICE;
 
 use actix_web::{web, Error, HttpRequest, HttpResponse,error::ErrorBadRequest};
 use actix_web_actors::ws;
 use actix::prelude::*;
-use std::time::Duration;
+use std::{time::Duration, sync::atomic::Ordering::Relaxed};
 use device_query::{DeviceQuery, DeviceState, MouseState};
 
 pub struct WebSocket {
@@ -45,7 +46,7 @@ impl actix::Actor for WebSocket {
 			let mouse: MouseState = device_state.get_mouse();
 			let mouse_x: f64 = mouse.coords.0 as f64;
 			let mouse_y: f64 = mouse.coords.1 as f64;
-			let msg: MSG = match position {
+			match position {
 				0..=4 => {
 					let x: f64 = (mouse_x - screen_width / 2.0) / screen_width;
 					let y: f64 = (screen_height / 2.0 - mouse_y) / screen_height;
@@ -59,11 +60,16 @@ impl actix::Actor for WebSocket {
 						_ => unreachable!()
 					};
 					
-					MSG::new(2, MSGDATA::Array([x, y]))
+					ctx.text(MSG::new(2, MSGDATA::Array([x, y])).to_string())
 				}
-				_ => MSG::new(-1, MSGDATA::Number(-1))
+				_ => ()
 			};
-			ctx.text(msg.to_string())
+		});
+		ctx.run_interval(Duration::from_millis(80), move |_, ctx| {
+			let voice: f32 = VOICE.load(Relaxed);
+			if voice > 0.0 {
+				ctx.text(MSG::new(3, MSGDATA::Number(voice.into())).to_string());
+			}
 		});
 	}
 }
@@ -77,10 +83,10 @@ impl actix::StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebSocket 
 			Ok(ws::Message::Text(text)) => {
 				let msg: MSG = MSG::from_json(text.to_string());
 				let text: String = match msg.protocol() {
-					0 => MSG::new(0, MSGDATA::Number(self.config.position())),
+					0 => MSG::new(0, MSGDATA::Number(self.config.position().into())),
 					1 => MSG::new(1, MSGDATA::Text(self.config.model())),
 					2 => MSG::new(2, MSGDATA::Array([0.5, 0.5])),
-					_ => MSG::new(-1, MSGDATA::Number(-1))
+					_ => MSG::new(-1, MSGDATA::Number(-1.0))
 				}.to_string();
 				ctx.text(text);
 			}

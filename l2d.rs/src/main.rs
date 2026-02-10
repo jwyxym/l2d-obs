@@ -3,14 +3,12 @@ use config::Config;
 mod ws;
 use ws::WebSocket;
 mod api;
-
-use actix_files::Files;
+mod micro;
+mod global;
 
 use actix_cors::Cors;
 use actix_web::{
-	HttpServer,
-	App,
-	web
+	App, HttpServer, web
 };
 use std::{
 	fs::{create_dir_all, exists, write},
@@ -23,8 +21,16 @@ async fn main() -> Result<()> {
 	if let Ok(exist) = exists("config.toml") && !exist {
 		let _ = write("config.toml", config.to_string());
 	}
+	println!("{}", config.to_string());
 	let port: i16 = config.port();
+	let address: String = config.address();
 	let _ = create_dir_all("vts");
+	if config.micro() {
+		let _ = micro::init();
+	}
+	let address: String = format!("{}:{}", address, port);
+	println!("服务器监听于 {}", address);
+	println!("请在obs导入 http://{}", address);
 	HttpServer::new(move || {
 		App::new()
 			.app_data(web::Data::new(config.clone()))
@@ -37,17 +43,11 @@ async fn main() -> Result<()> {
 				.max_age(3600)
 			)
 			.route("/ws", web::get().to(WebSocket::route))
-			.service(Files::new("/vts", "./vts")
-				.show_files_listing()
-				.use_last_modified(true)
-				.use_etag(true)
-				.prefer_utf8(true)
-				.disable_content_disposition()
-			)
 			.service(api::index)
 			.service(api::web)
+			.service(api::file)
 	})
-	.bind(format!("127.0.0.1:{}", port))?
+	.bind(address)?
 	.run()
 	.await
 }

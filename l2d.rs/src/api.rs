@@ -1,3 +1,6 @@
+mod model;
+use model::Model;
+
 use actix_web::{
 	Responder,
 	HttpResponse,
@@ -6,8 +9,12 @@ use actix_web::{
 	dev,
 	error::ErrorNotFound,
 	Result,
-	Error
+	Error,
+	web::Path,
+	error::ErrorBadRequest
 };
+use std::fs::{read_to_string, read};
+use mime_guess::from_path;
 
 #[get("/")]
 async fn index() -> impl Responder {
@@ -33,4 +40,33 @@ pub async fn web(req: HttpRequest) -> Result<impl Responder, Error> {
 	Ok(HttpResponse::Ok()
 		.content_type("application/javascript; charset=utf-8")
 		.body(content))
+}
+
+#[get(r#"/vts/{key:.*}"#)]
+pub async fn file(key: Path<String>) -> Result<impl Responder, Error> {
+	let path: String = format!("./vts/{}", key);
+	if key.ends_with(".json") && let Ok(content) = read_to_string(&path) {
+		if key.ends_with(".model3.json") && let Ok(model) = Model::from_json(&content) {
+			if let Ok(content) = model.to_string() {
+				return Ok(HttpResponse::Ok()
+					.content_type("application/json")
+					.body(content))
+			} else {
+				return Err(ErrorBadRequest("模型文件格式错误"));
+			}
+		}
+		Ok(HttpResponse::Ok()
+			.content_type("application/json")
+			.body(content))
+	} else {
+		if let Ok(content) = read(&path) {
+			let mime_type = from_path(&path)
+        		.first_or_octet_stream();
+			Ok(HttpResponse::Ok()
+				.content_type(mime_type.as_ref())
+				.body(content))
+		} else {
+			Err(ErrorBadRequest("读取文件失败"))
+		}
+	}
 }
