@@ -16,14 +16,16 @@ class WS {
 		url ?: string;
 		onopen ?: (e : any) => void;
 		onclose ?: (e : any) => void;
-		onmessage ?: (e : MSG) => void
+		onmessage ?: (protocol : number, data : MSG_DATA) => void
 	}) => {
 		this.ws = new ReconnectingWebSocket('./ws');
 		this.ws.onopen = obj.onopen ?? null;
 		this.ws.onclose = obj.onclose ?? null;
 		this.ws.onmessage = (e : { data : string; }) => {
-			if (obj.onmessage)
-				obj.onmessage(JSON.parse(e.data))
+			if (obj.onmessage) {
+				const { protocol, data } = JSON.parse(e.data);
+				obj.onmessage(protocol, data);
+			}
 		};
 	};
 

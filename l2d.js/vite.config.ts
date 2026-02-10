@@ -26,8 +26,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@Framework': path.resolve(__dirname, 'node_modules/easy-live2d/packages/cubism/Framework/src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
 })

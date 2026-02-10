@@ -12,7 +12,7 @@
 	import { onMounted, onUnmounted, reactive, ref } from 'vue';
 	import { Config, Live2DSprite, LogLevel } from 'easy-live2d';
 	import { Application, Ticker } from 'pixi.js';
-	import WS, { type MSG, type MSG_DATA } from './ws';
+	import WS, { type MSG_DATA } from './ws';
 
 	const canvasRef = ref<HTMLCanvasElement>();
 	const app = new Application();
@@ -23,7 +23,7 @@
 
 	const ws = new WS();
 	const live2D = reactive({
-		sprite : new Live2DSprite(),
+		sprite : new Live2DSprite() as any,
 		position : 0,
 		on : async (path : string) => {
 			live2D.sprite.init({
@@ -33,6 +33,28 @@
 			live2D.sprite.width = canvasRef.value!.clientWidth * window.devicePixelRatio;
 			live2D.sprite.height = canvasRef.value!.clientHeight * window.devicePixelRatio;
 			app.stage.addChild(live2D.sprite);
+			while(!live2D.sprite._model)
+				await new Promise(resolve => setTimeout(resolve, 100));
+			Object.defineProperty(live2D.sprite._model, '_lipsync', {
+				value: true,
+				writable: true,
+				enumerable: true,
+				configurable: true
+			});
+			Object.defineProperty(live2D.sprite._model._wavFileHandler, 'update', {
+				value: () => {},
+				writable: true,
+				enumerable: true,
+				configurable: true
+			});
+		},
+		openMouth : (value : number) => {
+			Object.defineProperty(live2D.sprite._model._wavFileHandler, '_lastRms', {
+				value: value,
+				writable: true,
+				enumerable: true,
+				configurable: true
+			});
 		},
 		drag : (x : number, y : number) => live2D.sprite._model?.setDragging(x, y),
 		destroy : () => live2D.sprite.destroy()
@@ -44,16 +66,19 @@
 			backgroundAlpha: 0
 		});
 		ws.connect({
-			onmessage : async (e : MSG) => {
-				switch(e.protocol) {
+			onmessage : async (protocol : number, data : MSG_DATA) => {
+				switch(protocol) {
 					case 0:
-						live2D.position = (e.data as MSG_DATA).Number;
+						live2D.position = data.Number;
 						break;
 					case 1:
-						await live2D.on((e.data as MSG_DATA).Text);
+						await live2D.on(data.Text);
 						break;
 					case 2:
-						live2D.drag(...(e.data as MSG_DATA).Array);
+						live2D.drag(...data.Array);
+						break;
+					case 3:
+						live2D.openMouth(data.Number);
 						break;
 				}
 			},

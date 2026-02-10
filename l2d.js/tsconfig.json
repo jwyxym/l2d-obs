@@ -1,5 +1,11 @@
 {
   "files": [],
+  "compilerOptions": {
+    "strictPropertyInitialization": false,
+    "verbatimModuleSyntax": false,
+    "strict": false,
+    "strictNullChecks": false,
+  },
   "references": [
     {
       "path": "./tsconfig.node.json"

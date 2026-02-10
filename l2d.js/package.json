@@ -11,7 +11,7 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "easy-live2d": "github:jwyxym/easy-live2d",
+    "easy-live2d": "^0.4.0-1",
     "pixi.js": "^8.9.2",
     "reconnecting-websocket": "^4.4.0",
     "vue": "^3.5.27"
