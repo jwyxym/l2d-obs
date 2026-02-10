@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use anyhow::{Result, Error};
 
 #[derive(Deserialize, Serialize)]
+#[allow(non_snake_case)]
 pub struct Model {
 	Version: i8,
     FileReferences: ModelFileReferences, 
@@ -10,6 +11,7 @@ pub struct Model {
 }
 
 #[derive(Deserialize, Serialize)]
+#[allow(non_snake_case)]
 pub struct ModelFileReferences {
 	Moc: String,
 	Textures: Vec<String>,
@@ -18,6 +20,7 @@ pub struct ModelFileReferences {
 }
 
 #[derive(Deserialize, Serialize)]
+#[allow(non_snake_case)]
 pub struct ModelGroup {
 	Target: String,
 	Name: String,
