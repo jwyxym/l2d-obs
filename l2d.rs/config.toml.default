@@ -1,6 +1,10 @@
 [server]
+#地址和端口
 address = "127.0.0.1"
 port = 8080
+#vts文件夹下的模型文件路径
 model = "***.model3.json"
+#位置：0中间 1左上 2右上 3左下 4右下
 position = 4
+#是否启用麦克风
 micro = false
