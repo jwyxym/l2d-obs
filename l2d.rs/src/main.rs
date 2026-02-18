@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
 	let address: String = config.address();
 	let _ = create_dir_all("vts");
 	if config.micro() {
-		let _ = micro::init();
+		let _ = micro::init(config.magnification());
 	}
 	let address: String = format!("{}:{}", address, port);
 	println!("服务器监听于 {}", address);

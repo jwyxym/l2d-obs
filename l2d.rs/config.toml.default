@@ -8,3 +8,5 @@ model = "***.model3.json"
 position = 4
 #是否启用麦克风
 micro = false
+#倍率（嘴部大小/音频响度）
+magnification = 1.0

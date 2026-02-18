@@ -8,7 +8,7 @@ use cpal::{
 	InputCallbackInfo
 };
 use std::{sync::atomic::Ordering::Relaxed, thread, time::Duration};
-pub fn init() -> thread::JoinHandle<()> {
+pub fn init(magnification: f32) -> thread::JoinHandle<()> {
 	thread::spawn(move || {
 		let host: Host = default_host();
 	
@@ -27,7 +27,7 @@ pub fn init() -> thread::JoinHandle<()> {
 					VOICE.store(if !data.is_empty() {
 							data.iter()
 								.map(|&x| x.abs())
-								.sum::<f32>() / data.len() as f32 * 100.0
+								.sum::<f32>() / data.len() as f32 * magnification
 						} else {
 							0.0
 						}, Relaxed);

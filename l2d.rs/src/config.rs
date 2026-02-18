@@ -15,7 +15,8 @@ pub struct ServerInfo {
 	port: i16,
 	model: String,
 	position: i8,
-	micro: bool
+	micro: bool,
+	magnification: f32
 }
 impl Config {
 	pub fn from (path: &str) -> Config {
@@ -51,7 +52,8 @@ impl Config {
 			port: port,
 			model: model,
 			position: 4,
-			micro: false
+			micro: false,
+			magnification: 1.0
 		};
 		Config {
 			server: info
@@ -71,6 +73,9 @@ impl Config {
 	}
 	pub fn micro (&self) -> bool {
 		self.server.micro
+	}
+	pub fn magnification (&self) -> f32 {
+		self.server.magnification
 	}
 	pub fn to_string (&self) -> String {
 		to_string(&self).unwrap_or(String::from("err"))
